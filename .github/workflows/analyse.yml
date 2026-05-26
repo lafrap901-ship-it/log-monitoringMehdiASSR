@@ -1,0 +1,31 @@
+name: Analyse Logs Linux
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cloner le dépôt
+        uses: actions/checkout@v4
+
+      - name: Créer des logs de test
+        run: |
+          sudo mkdir -p /var/log/nginx
+          echo 'May 26 10:01:23 srv sshd[1234]: Failed password for invalid user admin from 192.168.1.10 port 22 ssh2' | sudo tee /var/log/auth.log
+          echo 'May 26 10:02:44 srv sshd[1235]: Failed password for root from 10.0.0.5 port 22 ssh2' | sudo tee -a /var/log/auth.log
+          echo '192.168.1.20 - - [26/May/2026:10:00:01 +0000] "GET /index2.html HTTP/1.1" 404 162' | sudo tee /var/log/nginx/access.log
+
+      - name: Exécuter le script
+        run: |
+          chmod +x scripts/analyse_logs.sh
+          ./scripts/analyse_logs.sh
+
+      - name: Sauvegarder le rapport
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-logs
+          path: reports/report.txt
